@@ -272,6 +272,20 @@ function gameOver() {
 }
 
 // ==========================================
+// LOGGING SYSTEM (New Addition)
+// ==========================================
+function pingLogger() {
+  // Silent fetch to the worker to log visitation on Pages
+  fetch('https://fluppy.suprememuhit.workers.dev/ping', {
+    mode: 'cors',
+    cache: 'no-cache'
+  }).catch(e => console.log("Logger ping failed", e));
+}
+// Trigger on load
+pingLogger();
+
+
+// ==========================================
 // UI & INPUTS
 // ==========================================
 
