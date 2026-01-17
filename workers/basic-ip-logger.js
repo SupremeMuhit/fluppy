@@ -53,7 +53,6 @@ export default {
     }
 
     // If this is a specific ping for logging (from the frontend), just return 200 OK
-    const url = new URL(request.url);
     if (url.pathname === "/ping") {
        return new Response("Logged", { headers: corsHeaders });
     }
