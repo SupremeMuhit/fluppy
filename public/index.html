@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>FLUPPY SNAKE | Feature-Packed</title>
+  <title>FLUPPY SNAKE</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -105,27 +105,69 @@
 
         </div>
 
-        <button id="start-btn" class="glow-btn">START GAME</button>
+        <button id="start-btn" class="glow-btn full-width">START GAME</button>
         
-        <div class="high-score-display">
-          HIGH SCORE: <span id="menu-high-score">0</span>
+        <!-- LEADERBOARD (Top 10) -->
+        <div class="leaderboard-panel">
+          <h3>LEADERBOARD</h3>
+          <ul id="leaderboard-list">
+            <!-- JS Populates this -->
+             <li><span class="rank">1.</span> <span class="score">-</span></li>
+          </ul>
         </div>
+        
+        <!-- ABOUT BUTTON -->
+        <button id="about-btn" class="glow-btn outline full-width">ABOUT & CREDITS</button>
       </div>
 
     </div>
 
   </div>
 
+  <!-- SLIDING ABOUT PANEL -->
+  <div id="about-panel">
+    <div class="about-content">
+      <h2>ABOUT FLUPPY SNAKE</h2>
+      <p>A retro-futuristic snake game built for pure arcade fun.</p>
+      
+      <h3>CREDITS</h3>
+      <ul style="font-size: 0.8rem; list-style: none;">
+        <li style="margin-bottom: 10px;">
+          <strong>Design, Layout, Themes, Everything except game functions:</strong><br>
+          - <em><b>SupremeMuhit</b></em>
+        </li>
+        <li>
+          <strong>Game Functions/JS:</strong> Antigravity Agent<br>
+          <strong>Models used:</strong><br>
+          - Gemini 3 Pro High<br>
+          - Claude Sonnet 4.5 Thinking
+        </li>
+      </ul>
+
+      <h3>LINKS</h3>
+      <div class="about-links">
+        <a href="https://github.com/suprememuhit" target="_blank">GitHub</a>
+        <a href="https://youtube.com/@SupremeMuhit" target="_blank">YouTube</a>
+        <a href="#" class="social-btn discord">Discord (suprememuhit)</a>
+        <a href="https://x.com/suprememuhit" target="_blank">Twitter / X</a>
+        <a href="https://instagram.com/suprememuhit" target="_blank">Instagram</a>
+      </div>
+
+      <div class="close-wrapper">
+        <button id="close-about" class="glow-btn small full-width">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
   <!-- POPUP: GAME OVER -->
-  <div id="game-over" class="hidden">
+  <div id="game-over" class="hidden" style="display: none;">
     <h2>GAME OVER</h2>
     <div class="score-report">
       <div>SCORE: <span id="final-score">0</span></div>
       <div id="new-high-score" class="hidden">NEW HIGH SCORE!</div>
     </div>
     <div class="popup-actions">
-      <button id="restart-btn" class="glow-btn filled">TRY AGAIN</button>
-      <button id="menu-btn" class="glow-btn outline">MAIN MENU</button>
+      <button id="restart-btn" class="glow-btn filled full-width">TRY AGAIN</button>
     </div>
   </div>
 

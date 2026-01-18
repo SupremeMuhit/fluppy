@@ -92,11 +92,16 @@ class Grid {
   static generateMap(type) {
     game.obstacles = []; // Reset
     
+    // SAFE ZONE: Center of the map where snake spawns
+    const cx = Math.floor(CONFIG.cols / 2);
+    const cy = Math.floor(CONFIG.rows / 2);
+    const safeZone = (x, y) => Math.abs(x - cx) < 3 && Math.abs(y - cy) < 3;
+
     if (type === 'MAZE') {
       // Grid Maze
       for (let x = 4; x < CONFIG.cols - 4; x += 4) {
         for (let y = 4; y < CONFIG.rows - 4; y++) {
-          game.obstacles.push({x, y});
+          if (!safeZone(x, y)) game.obstacles.push({x, y});
         }
       }
     } else if (type === 'OBSTACLES') {
@@ -105,7 +110,8 @@ class Grid {
       for(let i=0; i<count; i++) {
         const x = Math.floor(Math.random() * CONFIG.cols);
         const y = Math.floor(Math.random() * CONFIG.rows);
-        if (x>5 || y>5) game.obstacles.push({x, y});
+        // Ensure not in safe zone
+        if (!safeZone(x, y)) game.obstacles.push({x, y});
       }
     }
   }
@@ -133,16 +139,27 @@ function startGame() {
   game.poison = null;
   game.food = spawnFood();
   if (MODES[game.settings.mode] === 'POISON') game.poison = spawnFood();
+  if (MODES[game.settings.mode] === 'SURVIVAL') game.obstacles = []; // Clear obstacles for new survival run
   
   // Apply Settings
   const mapType = MAPS[game.settings.map];
-  Grid.generateMap(mapType);
+  // Only regenerate map if NOT survival (survival builds map as you go)
+  if (MODES[game.settings.mode] !== 'SURVIVAL') Grid.generateMap(mapType);
+  else Grid.generateMap('BOX'); // Survival starts clean usually
   
+  // SAFETY NET: NUKE OBSTACLES NEAR SPAWN
+  const cx = Math.floor(CONFIG.cols / 2);
+  const cy = Math.floor(CONFIG.rows / 2);
+  game.obstacles = game.obstacles.filter(o => Math.abs(o.x - cx) > 4 || Math.abs(o.y - cy) > 4);
+
   const modeType = MODES[game.settings.mode];
   modeEl.textContent = `${modeType} (${DIFFICULTIES[game.settings.diff]})`;
   
   updateScore(0);
   
+  // RESET STEPS (Invisible Spawn Protection)
+  game.steps = 0;
+
   // Speed Calculation
   let tickRate = CONFIG.baseSpeed[DIFFICULTIES[game.settings.diff]];
   
@@ -151,17 +168,16 @@ function startGame() {
   
   if (game.timer) clearInterval(game.timer);
   game.timer = setInterval(update, tickRate);
-  
-  // Focus canvas (if we had tabindex, but window events work)
 }
 
 function update() {
   if (!game.active) return;
+  game.steps++;
 
   // 1. Move Snake
   if (game.nextDir) {
-    if (game.dir.x + game.nextDir.x !== 0 || game.dir.y + game.nextDir.y !== 0) {
-      game.dir = game.nextDir;
+    if ( game.dir.x + game.nextDir.x !== 0 || game.dir.y + game.nextDir.y !== 0) {
+       game.dir = game.nextDir;
     }
     game.nextDir = null; 
   }
@@ -181,24 +197,27 @@ function update() {
   } else {
     // Wall Death
     if (head.x < 0 || head.x >= CONFIG.cols || head.y < 0 || head.y >= CONFIG.rows) {
-      if (mode !== 'ZEN') return gameOver();
-      // Zen wrap
-      if (head.x < 0) head.x = CONFIG.cols - 1;
-      if (head.x >= CONFIG.cols) head.x = 0;
-      if (head.y < 0) head.y = CONFIG.rows - 1;
-      if (head.y >= CONFIG.rows) head.y = 0;
+      // Spawn Protection: If < 5 steps, just wrap/bounce instead of dying to fix "Instant Death" bug
+      if (game.steps < 5) {
+         if (head.x < 0) head.x = CONFIG.cols - 1;
+         if (head.x >= CONFIG.cols) head.x = 0;
+         if (head.y < 0) head.y = CONFIG.rows - 1;
+         if (head.y >= CONFIG.rows) head.y = 0;
+      } else {
+        if (mode !== 'ZEN') return gameOver();
+      }
     }
   }
 
   // 3. Collision Check
   // Self
   if (game.snake.some(s => s.x === head.x && s.y === head.y)) {
-    if (mode !== 'ZEN') return gameOver();
+    if (mode !== 'ZEN' && game.steps > 5) return gameOver();
   }
   
   // Obstacles
   if (game.obstacles.some(o => o.x === head.x && o.y === head.y)) {
-    return gameOver();
+    if (game.steps > 5) return gameOver();
   }
   
   // Poison (Collision with red food)
@@ -214,15 +233,18 @@ function update() {
     relocatePoison();
     // Maybe shrink snake?
     if (game.snake.length > 3) game.snake.pop(); 
-    return; // Don't process move this tick properly? Or just continue
+    return; // Don't process move this tick properly
   }
 
   // 4. Move Execution
   game.snake.unshift(head);
 
+
   // 5. Eat Food
   if (head.x === game.food.x && head.y === game.food.y) {
-    game.score += 10;
+    // SCORING: 10/20/30/40 based on difficulty
+    const points = (game.settings.diff + 1) * 10; 
+    game.score += points;
     
     // Campaign Mode: Speed up every 50 points
     if (mode === 'CAMPAIGN' && game.score % 50 === 0) {
@@ -378,14 +400,59 @@ function gameOver() {
   game.active = false;
   clearInterval(game.timer);
   
-  document.getElementById('game-over').classList.remove('hidden');
+  const popup = document.getElementById('game-over');
+  const newHighScoreEl = document.getElementById('new-high-score');
+  
+  popup.classList.remove('hidden');
+  popup.style.display = 'block'; // Force show
+  
   document.getElementById('final-score').textContent = game.score;
   
+  // Hide High Score message initially
+  newHighScoreEl.classList.add('hidden');
+
   const saved = parseInt(localStorage.getItem('snakeHighScore')) || 0;
   if (game.score > saved) {
     localStorage.setItem('snakeHighScore', game.score);
-    document.getElementById('new-high-score').classList.remove('hidden');
+    // ONLY show if it's actually a new high score
+    newHighScoreEl.classList.remove('hidden');
     updateMenuHighScore();
+  }
+  
+  // Leaderboard Logic
+  updateLeaderboard(game.score);
+}
+
+
+function updateLeaderboard(newScore) {
+  let entries = JSON.parse(localStorage.getItem('fluppyLeaderboard') || '[]');
+  
+  // Add new score
+  if(newScore > 0) {
+    entries.push(newScore);
+    entries.sort((a,b) => b-a); // Descending
+    entries = entries.slice(0, 10); // Top 10
+    localStorage.setItem('fluppyLeaderboard', JSON.stringify(entries));
+  }
+  
+  renderLeaderboard(entries);
+}
+
+function renderLeaderboard(entries) {
+  if(!entries) entries = JSON.parse(localStorage.getItem('fluppyLeaderboard') || '[]');
+  
+  const list = document.getElementById('leaderboard-list');
+  list.innerHTML = '';
+  
+  // Fill up to 10 slots, or just show what we have
+  // If empty, show some placeholders?
+  const count = Math.max(entries.length, 5); 
+  
+  for(let i=0; i<10; i++) {
+    const score = entries[i] !== undefined ? entries[i] : '-';
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="rank">${i+1}.</span> <span class="score">${score}</span>`;
+    list.appendChild(li);
   }
 }
 
@@ -444,11 +511,6 @@ function handleSetting(action, target) {
   updateSettingsUI();
 }
 
-function updateMenuHighScore() {
-  const s = localStorage.getItem('snakeHighScore') || 0;
-  document.getElementById('menu-high-score').textContent = s;
-}
-
 // Arrow Buttons for Settings
 document.querySelectorAll('.arrow-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -457,21 +519,38 @@ document.querySelectorAll('.arrow-btn').forEach(btn => {
 });
 
 document.getElementById('start-btn').addEventListener('click', startGame);
-document.getElementById('restart-btn').addEventListener('click', startGame);
-document.getElementById('menu-btn').addEventListener('click', () => {
-  document.getElementById('game-over').classList.add('hidden');
-  document.getElementById('preview-overlay').style.opacity = '1';
-  // Here we don't switch "Views" anymore as it's split screen
-  // Just reset the board maybe?
-  Grid.init();
-  drawPreview();
+document.getElementById('restart-btn').addEventListener('click', () => {
+   // Reset inline style for safety
+   document.getElementById('game-over').style.display = 'none';
+   startGame();
+});
+
+document.getElementById('about-btn').addEventListener('click', () => {
+  document.getElementById('about-panel').classList.add('open');
+});
+
+document.getElementById('close-about').addEventListener('click', () => {
+  document.getElementById('about-panel').classList.remove('open');
+});
+
+// Custom Discord Button Logic
+document.querySelector('.social-btn.discord').addEventListener('click', (e) => {
+  e.preventDefault();
+  const text = "suprememuhit";
+  navigator.clipboard.writeText(text).then(() => {
+    alert("Copied 'suprememuhit' to clipboard!");
+  }).catch(err => {
+    console.error('Failed to copy: ', err);
+  });
 });
 
 // KEYBOARD Controls
 document.addEventListener('keydown', e => {
-  // If not active, maybe Start on Enter?
+  if (e.key === 'Escape') {
+    document.getElementById('about-panel').classList.remove('open');
+    return;
+  }
   if (!game.active && e.key === 'Enter') {
-     // Prevent spam
      if (document.getElementById('game-over').classList.contains('hidden')) startGame();
      return;
   }
@@ -536,7 +615,9 @@ document.addEventListener('touchend', e => {
   }
 });
 
-updateMenuHighScore();
+// Force Hide Game Over on Init
+document.getElementById('game-over').classList.add('hidden');
+renderLeaderboard();
 updateSettingsUI();
 window.addEventListener('resize', () => { 
   Grid.init(); 

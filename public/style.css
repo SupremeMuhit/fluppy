@@ -127,7 +127,8 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-main);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   height: 100vh;
   width: 100vw;
   transition: background-color 0.5s ease, color 0.5s ease;
@@ -176,7 +177,7 @@ body {
 }
 
 #game-right {
-  width: 320px; /* Fixed sidebar width */
+  width: 350px;
   background: rgba(0,0,0,0.2);
   border-left: 2px solid var(--grid-color);
   display: flex;
@@ -184,13 +185,15 @@ body {
   padding: 20px;
   backdrop-filter: blur(5px);
   z-index: 30;
+  height: 100%;
 }
 
 /* SIDEBAR COMPONENTS */
 .sidebar-header {
   border-bottom: 2px solid var(--primary-color);
-  margin-bottom: 20px;
   padding-bottom: 10px;
+  flex-shrink: 0;
+  margin-bottom: 15px;
 }
 
 .game-title {
@@ -209,7 +212,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 15px; /* Spacing between elements */
+  overflow: hidden; /* Prevent sidebar scroll for layout */
 }
 
 .settings-grid {
@@ -220,6 +224,7 @@ body {
   padding: 15px;
   border-radius: 10px;
   border: 1px solid var(--grid-color);
+  flex-shrink: 0;
 }
 
 .setting-group {
@@ -259,12 +264,139 @@ body {
   color: var(--accent-color);
 }
 
-.high-score-display {
-  margin-top: auto;
-  font-size: 0.9rem;
+/* LEADERBOARD (Flexible Height) */
+.leaderboard-panel {
+  background: var(--panel-bg);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid var(--grid-color);
+  flex-grow: 1; /* Consume available space */
+  display: flex;
+  flex-direction: column;
+  min-height: 150px; /* Minimum height constraint */
+  overflow: hidden;
+}
+
+.leaderboard-panel h3 {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  margin-bottom: 10px;
   text-align: center;
-  opacity: 0.8;
-  padding-top: 20px;
+  border-bottom: 1px solid var(--grid-color);
+  padding-bottom: 5px;
+  flex-shrink: 0;
+}
+
+#leaderboard-list {
+  list-style: none;
+  font-size: 0.8rem;
+  overflow-y: auto;
+  flex: 1; /* Scroll freely */
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) rgba(0,0,0,0.1);
+}
+
+#leaderboard-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px dashed rgba(255,255,255,0.1);
+}
+
+.rank {
+  color: var(--primary-color);
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+/* ABOUT PANEL (SLIDING) */
+#about-panel {
+  position: fixed;
+  top: 0;
+  right: -400px; /* Hidden off-screen */
+  width: 350px;
+  height: 100%;
+  background: var(--bg-color);
+  border-left: 2px solid var(--primary-color);
+  z-index: 200;
+  transition: 0.3s ease-in-out;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+}
+
+#about-panel.open {
+  right: 0;
+}
+
+/* About content wrapper that absorbs extra space */
+.about-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Manage overflow internally */
+}
+
+/* Scrollable part */
+.about-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+.about-content h2 {
+  font-family: var(--font-display);
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--grid-color);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.about-content h3 {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: var(--accent-color);
+}
+
+.about-content ul {
+  list-style: none;
+  line-height: 1.8;
+}
+
+.about-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.about-links a {
+  color: var(--text-color);
+  text-decoration: none;
+  border: 1px solid var(--grid-color);
+  padding: 10px;
+  border-radius: 5px;
+  transition: 0.2s;
+}
+
+.about-links a:hover {
+  background: var(--grid-color);
+  border-color: var(--primary-color);
+}
+
+/* Pinned Close Button */
+.close-wrapper {
+  margin-top: auto;
+  flex-shrink: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--grid-color);
 }
 
 /* GAME UI LEFT */
@@ -292,8 +424,20 @@ body {
   padding: 10px;
   border: 4px solid var(--grid-color);
   border-radius: 4px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.3), inset 0 0 20px rgba(0,0,0,0.5); /* Glowing "Danger" Border */
   background: rgba(0,0,0,0.2);
+  transition: box-shadow 0.3s;
+}
+
+/* Make it pulse slightly? */
+@keyframes borderPulse {
+  0% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(255, 0, 0, 0.5); }
+  100% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); }
+}
+
+.canvas-wrapper {
+  animation: borderPulse 3s infinite;
 }
 
 #preview-overlay {
@@ -338,47 +482,53 @@ body {
 .popup-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 15px;
+  margin-top: 25px;
 }
 
 /* BUTTON STYLES */
 .glow-btn {
-  padding: 12px 20px;
+  padding: 15px 20px;
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
   text-transform: uppercase;
   transition: 0.2s;
+  width: 100%;
 }
 
 /* FILLED BUTTON (Start, Try Again) */
 .glow-btn, .glow-btn.filled {
   background: var(--primary-color);
-  color: black; /* Force black text on filled */
+  color: black;
   border: 2px solid var(--primary-color);
   box-shadow: var(--glow-shadow);
   font-weight: 900;
 }
 
 .glow-btn:hover, .glow-btn.filled:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px var(--primary-color);
+  transform: scale(1.02);
+  box-shadow: 0 0 25px var(--primary-color);
 }
 
-/* OUTLINE BUTTON (Main Menu) */
+/* OUTLINE BUTTON (Main Menu, About) */
 .glow-btn.outline {
   background: transparent;
-  color: var(--primary-color); /* Match theme color */
+  color: var(--primary-color);
   border: 2px solid var(--primary-color);
   box-shadow: none;
 }
 
 .glow-btn.outline:hover {
   background: rgba(255,255,255,0.1);
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
+.glow-btn.small {
+  margin-top: 0; /* Let wrapper handle spacing */
+  padding: 10px;
+  font-size: 0.8rem;
+}
 
 canvas {
   display: block;
@@ -443,7 +593,7 @@ canvas {
   }
   
   #game-left {
-    flex: 2; /* More space for game */
+    flex: 2;
     padding: 10px;
   }
   
@@ -461,10 +611,7 @@ canvas {
   }
   
   .sidebar-header {
-    border-bottom: none;
-    margin-bottom: 0;
-    width: 100%;
-    display: none; /* Hide title on mobile to save space? or make small */
+    display: none;
   }
   
   .sidebar-content {
@@ -473,6 +620,7 @@ canvas {
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
+    overflow: visible;
   }
   
   .settings-grid {
@@ -490,6 +638,10 @@ canvas {
   }
   
   .setting-group label {
-    display: none; /* Icon only or compact */
+    display: none;
+  }
+  
+  .leaderboard-panel {
+    display: none; 
   }
 }
