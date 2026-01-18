@@ -9,6 +9,7 @@
   --food-color: #ff0055;
   --poison-color: #8800ff;
   --text-color: #ffffff;
+  --panel-bg: rgba(0,0,0,0.5);
   --glow-shadow: 0 0 10px var(--primary-color);
   --font-main: 'Rajdhani', sans-serif;
   --font-display: 'Press Start 2P', monospace;
@@ -24,6 +25,7 @@
   --food-color: #0f380f;
   --poison-color: #555555;
   --text-color: #0f380f;
+  --panel-bg: rgba(15, 56, 15, 0.1);
   --glow-shadow: none;
   --scanline-opacity: 0.05;
 }
@@ -37,6 +39,7 @@
   --food-color: #ffcc00;
   --poison-color: #ff0000;
   --text-color: #ffffff;
+  --panel-bg: #333;
   --glow-shadow: none;
   --scanline-opacity: 0;
 }
@@ -50,6 +53,7 @@
   --food-color: #ff3300;
   --poison-color: #9933ff;
   --text-color: #ccff00;
+  --panel-bg: rgba(20, 40, 0, 0.8);
   --glow-shadow: 0 0 15px #33ff00;
   --scanline-opacity: 0.2;
 }
@@ -63,6 +67,7 @@
   --food-color: #ffffff;
   --poison-color: #ff0000;
   --text-color: #00ff00;
+  --panel-bg: rgba(0, 20, 0, 0.8);
   --glow-shadow: 0 0 5px #00ff00;
   --scanline-opacity: 0.1;
 }
@@ -76,6 +81,7 @@
   --food-color: #ff9900;
   --poison-color: #660066;
   --text-color: #00eaff;
+  --panel-bg: rgba(30, 0, 40, 0.6);
   --glow-shadow: 0 0 15px #ff00de;
   --scanline-opacity: 0.15;
 }
@@ -89,6 +95,7 @@
   --food-color: #00ced1;
   --poison-color: #555555;
   --text-color: #ff1493;
+  --panel-bg: #fff;
   --glow-shadow: none;
   --scanline-opacity: 0;
 }
@@ -102,8 +109,9 @@
   --food-color: #0f380f;
   --poison-color: #306230;
   --text-color: #0f380f;
+  --panel-bg: #8bac0f;
   --glow-shadow: none;
-  --scanline-opacity: 0.1; /* LCD grid effect essentially */
+  --scanline-opacity: 0.1;
 }
 
 
@@ -121,9 +129,7 @@ body {
   font-family: var(--font-main);
   overflow: hidden;
   height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100vw;
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
@@ -152,55 +158,46 @@ body {
   z-index: 11;
 }
 
-#game-container {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  height: 100%;
-  max-height: 800px;
+/* LAYOUT: SPLIT SCREEN */
+#game-layout {
   display: flex;
-  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  position: relative;
+}
+
+#game-left {
+  flex: 1; /* Takes remaining space */
+  display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 20;
+  padding: 20px;
 }
 
-/* POPUP MODAL STYLES (Menu & Game Over) */
-#main-menu, #game-over {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0,0,0,0.85); /* Slightly darker for better contrast */
-  padding: 40px;
-  border-radius: 20px;
-  border: 2px solid var(--primary-color);
-  text-align: center;
-  backdrop-filter: blur(8px); /* Deeper blur */
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 0 40px rgba(0,0,0,0.7);
-  z-index: 100; /* Ensure on top of everything */
+#game-right {
+  width: 320px; /* Fixed sidebar width */
+  background: rgba(0,0,0,0.2);
+  border-left: 2px solid var(--grid-color);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  backdrop-filter: blur(5px);
+  z-index: 30;
 }
 
-/* Game Over specific tweak to ensure it overlays the canvas */
-#game-over {
-  animation: popIn 0.3s ease-out;
+/* SIDEBAR COMPONENTS */
+.sidebar-header {
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
 }
-
-@keyframes popIn {
-  from { opacity: 0; transform: translate(-50%, -40%); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
-}
-
-.hidden { display: none !important; }
 
 .game-title {
   font-family: var(--font-display);
-  font-size: 2.5rem;
-  margin-bottom: 30px;
+  font-size: 1.8rem;
   text-shadow: 4px 4px 0px rgba(0,0,0,0.5);
-  line-height: 1.5;
+  line-height: 1.2;
 }
 
 .highlight {
@@ -208,92 +205,69 @@ body {
   text-shadow: var(--glow-shadow);
 }
 
-.settings-grid {
+.sidebar-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin-bottom: 30px;
+}
+
+.settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--panel-bg);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid var(--grid-color);
 }
 
 .setting-group {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 5px;
 }
 
 .setting-group label {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
 }
 
 .selector {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
 }
 
 .arrow-btn {
   background: none;
   border: none;
   color: var(--primary-color);
-  font-size: 1.2rem;
+  font-size: 1rem;
   cursor: pointer;
   padding: 5px;
 }
 
 .value {
-  width: 100px;
+  width: 80px;
   text-align: center;
   font-weight: bold;
-  color: var(--accent-color);
-}
-
-.glow-btn {
-  background: transparent;
-  color: var(--primary-color);
-  border: 2px solid var(--primary-color);
-  padding: 15px 40px;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  cursor: pointer;
-  text-transform: uppercase;
-  box-shadow: var(--glow-shadow);
-  transition: 0.2s;
-  margin-top: 10px;
-}
-
-.glow-btn:hover {
-  background: var(--primary-color);
-  color: var(--bg-color);
-  box-shadow: 0 0 20px var(--primary-color);
-  transform: scale(1.05);
-}
-
-.text-btn {
-  background: none;
-  border: none;
-  color: var(--text-color);
-  margin-top: 15px;
-  cursor: pointer;
-  text-decoration: underline;
-  opacity: 0.8;
-  transition: 0.2s;
-}
-
-.text-btn:hover {
-  opacity: 1;
+  font-size: 0.9rem;
   color: var(--accent-color);
 }
 
 .high-score-display {
-  margin-top: 20px;
+  margin-top: auto;
   font-size: 0.9rem;
+  text-align: center;
   opacity: 0.8;
+  padding-top: 20px;
 }
 
-/* GAME UI */
+/* GAME UI LEFT */
 #game-ui {
   width: 100%;
   height: 100%;
@@ -305,9 +279,8 @@ body {
 
 .hud {
   display: flex;
-  justify-content: space-between;
-  width: 100%;
-  padding: 10px 20px;
+  gap: 20px;
+  margin-bottom: 10px;
   font-family: var(--font-display);
   font-size: 0.8rem;
   color: var(--primary-color);
@@ -323,6 +296,90 @@ body {
   background: rgba(0,0,0,0.2);
 }
 
+#preview-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  color: var(--text-color);
+  background: rgba(0,0,0,0.7);
+  padding: 10px 20px;
+  border-radius: 5px;
+  pointer-events: none;
+  opacity: 0; /* Hidden when playing */
+  transition: opacity 0.3s;
+}
+
+/* POPUP (Game Over) */
+#game-over {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.9);
+  padding: 40px;
+  border-radius: 20px;
+  border: 2px solid var(--primary-color);
+  text-align: center;
+  backdrop-filter: blur(10px);
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 0 50px rgba(0,0,0,0.8);
+  z-index: 100;
+  animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translate(-50%, -40%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* BUTTON STYLES */
+.glow-btn {
+  padding: 12px 20px;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+
+/* FILLED BUTTON (Start, Try Again) */
+.glow-btn, .glow-btn.filled {
+  background: var(--primary-color);
+  color: black; /* Force black text on filled */
+  border: 2px solid var(--primary-color);
+  box-shadow: var(--glow-shadow);
+  font-weight: 900;
+}
+
+.glow-btn:hover, .glow-btn.filled:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px var(--primary-color);
+}
+
+/* OUTLINE BUTTON (Main Menu) */
+.glow-btn.outline {
+  background: transparent;
+  color: var(--primary-color); /* Match theme color */
+  border: 2px solid var(--primary-color);
+  box-shadow: none;
+}
+
+.glow-btn.outline:hover {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.05);
+}
+
+
 canvas {
   display: block;
   background-image: 
@@ -334,20 +391,18 @@ canvas {
 /* MOBILE CONTROLS */
 #mobile-controls {
   margin-top: 20px;
-  display: none; /* Hidden on desktop */
+  display: none;
   width: 100%;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
 }
 
-/* D-PAD STYLES */
 .d-pad {
   display: grid;
   grid-template-columns: repeat(3, 60px);
   grid-template-rows: repeat(2, 60px);
   gap: 5px;
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 .d-btn {
@@ -368,7 +423,6 @@ canvas {
 .d-btn:active {
   background: var(--primary-color);
   color: var(--bg-color);
-  transform: scale(0.95);
 }
 
 .d-btn.up { grid-column: 2; grid-row: 1; }
@@ -376,14 +430,66 @@ canvas {
 .d-btn.down { grid-column: 2; grid-row: 2; }
 .d-btn.right { grid-column: 3; grid-row: 2; }
 
-.swipe-hint {
-  font-size: 0.8rem;
-  opacity: 0.5;
-  margin-top: 5px;
-}
-
 @media (hover: none) and (pointer: coarse) {
   #mobile-controls {
     display: flex;
+  }
+}
+
+/* RESPONSIVE LAYOUT */
+@media (max-width: 800px) {
+  #game-layout {
+    flex-direction: column;
+  }
+  
+  #game-left {
+    flex: 2; /* More space for game */
+    padding: 10px;
+  }
+  
+  #game-right {
+    width: 100%;
+    height: auto;
+    max-height: 40%;
+    overflow-y: auto;
+    border-left: none;
+    border-top: 2px solid var(--grid-color);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .sidebar-header {
+    border-bottom: none;
+    margin-bottom: 0;
+    width: 100%;
+    display: none; /* Hide title on mobile to save space? or make small */
+  }
+  
+  .sidebar-content {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .settings-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 5px;
+    gap: 5px;
+  }
+  
+  .setting-group {
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 5px;
+    border-radius: 5px;
+  }
+  
+  .setting-group label {
+    display: none; /* Icon only or compact */
   }
 }
