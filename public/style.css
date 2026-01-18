@@ -16,6 +16,8 @@
   --scanline-opacity: 0.15;
 }
 
+.hidden { display: none !important; }
+
 /* Theme: CLASSIC (Retro Gameboy) */
 [data-theme="CLASSIC"] {
   --bg-color: #8b9c48;
@@ -146,6 +148,22 @@ body {
   pointer-events: none;
   z-index: 10;
   opacity: var(--scanline-opacity);
+}
+
+#dev-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  background: rgba(255, 204, 0, 0.2);
+  color: #ffcc00;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  padding: 5px;
+  z-index: 99999;
+  pointer-events: none;
+  border-bottom: 1px solid rgba(255, 204, 0, 0.5);
 }
 
 .vignette {
@@ -311,6 +329,9 @@ body {
   margin-right: 10px;
 }
 
+.mobile-msg { display: none; }
+.pc-msg { display: block; }
+
 /* ABOUT PANEL (SLIDING) */
 #about-panel {
   position: fixed;
@@ -399,6 +420,30 @@ body {
   border-top: 1px solid var(--grid-color);
 }
 
+.fmhy-promo {
+  text-align: center;
+  margin: 20px 0 10px 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--grid-color);
+}
+
+.fmhy-promo img {
+  max-width: 80px;
+  border-radius: 50%; /* Circle or rounded? Let's check aspect ratio. Assuming simple logo style */
+  transition: transform 0.2s;
+}
+
+.fmhy-promo img:hover {
+  transform: scale(1.1);
+}
+
+.fmhy-promo p {
+  font-size: 0.75rem;
+  margin-top: 5px;
+  color: var(--accent-color);
+  opacity: 0.9;
+}
+
 /* GAME UI LEFT */
 #game-ui {
   width: 100%;
@@ -447,12 +492,39 @@ body {
   transform: translate(-50%, -50%);
   font-family: var(--font-display);
   color: var(--text-color);
-  background: rgba(0,0,0,0.7);
-  padding: 10px 20px;
-  border-radius: 5px;
+  background: rgba(0,0,0,0.85); /* Slightly darker/more opaque */
+  padding: 20px 30px;
+  border-radius: 10px;
   pointer-events: none;
-  opacity: 0; /* Hidden when playing */
+  opacity: 0; 
   transition: opacity 0.3s;
+  text-align: center;
+  display: flex; /* Flex to stack items */
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.press-start {
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  animation: pulseText 1s infinite alternate;
+}
+
+@keyframes pulseText {
+  from { opacity: 0.8; text-shadow: 0 0 5px var(--primary-color); }
+  to { opacity: 1; text-shadow: 0 0 15px var(--primary-color); }
+}
+
+/* CONTROLS HINT (Overlay version) */
+.controls-info {
+  font-size: 0.7rem; /* Smaller than main text */
+  opacity: 0.8;
+  color: var(--text-color);
+  font-family: var(--font-main); /* Readable font */
+  letter-spacing: 1px;
 }
 
 /* POPUP (Game Over) */
@@ -462,15 +534,15 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   background: rgba(0,0,0,0.9);
-  padding: 40px;
+  padding: 20px; /* Reduced padding for smaller containers */
   border-radius: 20px;
   border: 2px solid var(--primary-color);
   text-align: center;
   backdrop-filter: blur(10px);
-  width: 90%;
+  width: 95%; /* Fit inside canvas wrapper */
   max-width: 400px;
   box-shadow: 0 0 50px rgba(0,0,0,0.8);
-  z-index: 100;
+  z-index: 50; /* Inside wrapper, but on top of canvas (canvas is auto) */
   animation: popIn 0.3s ease-out;
 }
 
@@ -538,9 +610,10 @@ canvas {
   background-size: 20px 20px;
 }
 
-/* MOBILE CONTROLS */
+
+/* MOBILE CONTROLS (D-PAD) */
 #mobile-controls {
-  margin-top: 20px;
+  margin: 10px 0;
   display: none;
   width: 100%;
   flex-direction: column;
@@ -552,7 +625,7 @@ canvas {
   grid-template-columns: repeat(3, 60px);
   grid-template-rows: repeat(2, 60px);
   gap: 5px;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .d-btn {
@@ -568,6 +641,7 @@ canvas {
   justify-content: center;
   align-items: center;
   transition: 0.1s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .d-btn:active {
@@ -580,68 +654,113 @@ canvas {
 .d-btn.down { grid-column: 2; grid-row: 2; }
 .d-btn.right { grid-column: 3; grid-row: 2; }
 
-@media (hover: none) and (pointer: coarse) {
-  #mobile-controls {
-    display: flex;
-  }
+/* MOBILE BOTTOM BAR */
+#mobile-bottom-bar {
+  display: none; /* Hidden on Desktop */
+  width: 100%;
+  padding: 10px 20px 20px 20px;
+  gap: 10px;
+  background: var(--bg-color);
+  z-index: 50;
+  margin-top: auto; /* Push to bottom */
 }
 
-/* RESPONSIVE LAYOUT */
+#mob-start-btn {
+  flex: 3;
+  font-size: 1.2rem;
+  padding: 15px;
+}
+
+#mob-settings-btn {
+  flex: 1;
+  font-size: 1.5rem;
+  padding: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* RESPONSIVE LAYOUT (Mobile Optimization) */
 @media (max-width: 800px) {
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+
   #game-layout {
     flex-direction: column;
+    flex: 1;
+    height: auto;
+    overflow: hidden;
   }
   
   #game-left {
-    flex: 2;
+    flex: 1;
     padding: 10px;
+    align-items: flex-start; /* Move game closer to top */
+    overflow: hidden;
   }
   
-  #game-right {
+  .canvas-wrapper {
     width: 100%;
-    height: auto;
-    max-height: 40%;
+    max-width: 100%;
+    aspect-ratio: 1; /* Keep square */
+    padding: 5px;
+  }
+  
+  canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* SIDEBAR -> SLIDE-OUT DRAWER on Mobile */
+  #game-right {
+    position: fixed;
+    top: 0;
+    right: -100%; /* Hidden */
+    width: 300px; /* Fixed width settings panel */
+    height: 100%;
+    border-left: 2px solid var(--primary-color);
+    background: var(--bg-color);
+    box-shadow: -10px 0 50px rgba(0,0,0,0.8);
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999; /* FORCE TOP */
     overflow-y: auto;
-    border-left: none;
-    border-top: 2px solid var(--grid-color);
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px; /* Safe area */
+  }
+
+  #game-right.open {
+    right: 0;
+  }
+  
+  /* Hide Original Start Button in Drawer on Mobile (Duplicated at Bottom) */
+  #game-right #start-btn {
+    display: none;
   }
   
   .sidebar-header {
-    display: none;
+    display: block; /* Show header in drawer */
+    text-align: center;
+    margin-top: 10px;
   }
   
-  .sidebar-content {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    overflow: visible;
+  /* Show Mobile Controls */
+  #mobile-controls {
+    display: flex;
   }
   
-  .settings-grid {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 5px;
-    gap: 5px;
-  }
-  
-  .setting-group {
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 5px;
-    border-radius: 5px;
-  }
-  
-  .setting-group label {
-    display: none;
+  /* Show Bottom Bar */
+  #mobile-bottom-bar {
+    display: flex;
   }
   
   .leaderboard-panel {
-    display: none; 
+    display: flex; /* Show leaderboard in drawer */
   }
+
+  .mobile-msg { display: block; }
+  .pc-msg { display: none; }
 }
+

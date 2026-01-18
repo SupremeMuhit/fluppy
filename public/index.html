@@ -14,6 +14,9 @@
   <div class="scanlines"></div>
   <div class="vignette"></div>
 
+  <!-- DEV BANNER -->
+  <div id="dev-banner">⚠️ PROJECT IN DEVELOPMENT ⚠️</div>
+
   <!-- GAME LAYOUT CONTAINER (Split Screen) -->
   <div id="game-layout">
     
@@ -28,7 +31,25 @@
         <div class="canvas-wrapper">
           <canvas id="game-canvas"></canvas>
           <!-- Overlay Message for "Preview" state -->
-          <div id="preview-overlay">PRESS START TO PLAY</div>
+          <div id="preview-overlay">
+            <div class="press-start">PRESS START TO PLAY</div>
+            <div class="controls-info">
+              <p class="pc-msg">PC: Use WASD or Arrow Keys</p>
+              <p class="mobile-msg">Mobile: Swipe or use Arrow keys</p>
+            </div>
+          </div>
+          
+          <!-- POPUP: GAME OVER -->
+          <div id="game-over" class="hidden" style="display: none;">
+            <h2>GAME OVER</h2>
+            <div class="score-report">
+              <div>SCORE: <span id="final-score">0</span></div>
+              <div id="new-high-score" class="hidden">NEW HIGH SCORE!</div>
+            </div>
+            <div class="popup-actions">
+              <button id="restart-btn" class="glow-btn filled full-width">TRY AGAIN</button>
+            </div>
+          </div>
         </div>
 
         <!-- Mobile Controls (Visible only on touch) -->
@@ -115,6 +136,8 @@
              <li><span class="rank">1.</span> <span class="score">-</span></li>
           </ul>
         </div>
+
+
         
         <!-- ABOUT BUTTON -->
         <button id="about-btn" class="glow-btn outline full-width">ABOUT & CREDITS</button>
@@ -122,6 +145,12 @@
 
     </div>
 
+  </div>
+
+  <!-- MOBILE BOTTOM BAR -->
+  <div id="mobile-bottom-bar">
+    <button id="mob-start-btn" class="glow-btn filled">START GAME</button>
+    <button id="mob-settings-btn" class="glow-btn outline">⚙️</button>
   </div>
 
   <!-- SLIDING ABOUT PANEL -->
@@ -134,7 +163,7 @@
       <ul style="font-size: 0.8rem; list-style: none;">
         <li style="margin-bottom: 10px;">
           <strong>Design, Layout, Themes, Everything except game functions:</strong><br>
-          - <em><b>SupremeMuhit</b></em>
+          - <em><b>Unknown</b></em>
         </li>
         <li>
           <strong>Game Functions/JS:</strong> Antigravity Agent<br>
@@ -146,11 +175,19 @@
 
       <h3>LINKS</h3>
       <div class="about-links">
-        <a href="https://github.com/suprememuhit" target="_blank">GitHub</a>
-        <a href="https://youtube.com/@SupremeMuhit" target="_blank">YouTube</a>
-        <a href="#" class="social-btn discord">Discord (suprememuhit)</a>
-        <a href="https://x.com/suprememuhit" target="_blank">Twitter / X</a>
-        <a href="https://instagram.com/suprememuhit" target="_blank">Instagram</a>
+        <a href="https://rentry.co/uy97o9ot" target="_blank">GitHub</a>
+        <a href="https://rentry.co/uy97o9ot" target="_blank">YouTube</a>
+        <a href="https://rentry.co/uy97o9ot" target="_blank">Discord</a>
+        <a href="https://rentry.co/uy97o9ot" target="_blank">Twitter / X</a>
+        <a href="https://rentry.co/uy97o9ot" target="_blank">Instagram</a>
+      </div>
+
+      <div class="fmhy-promo">
+        <p style="margin-bottom: 8px; font-size: 0.8rem; line-height: 1.4;">Checkout FMHY, The largest community driven Free Media Index</p>
+        <a href="https://fmhy.net" target="_blank">
+          <img src="https://fmhy.net/test.png" alt="FMHY" title="Visit FMHY">
+        </a>
+        <p>💖 for all the members of FMHY Community</p>
       </div>
 
       <div class="close-wrapper">
@@ -159,17 +196,7 @@
     </div>
   </div>
 
-  <!-- POPUP: GAME OVER -->
-  <div id="game-over" class="hidden" style="display: none;">
-    <h2>GAME OVER</h2>
-    <div class="score-report">
-      <div>SCORE: <span id="final-score">0</span></div>
-      <div id="new-high-score" class="hidden">NEW HIGH SCORE!</div>
-    </div>
-    <div class="popup-actions">
-      <button id="restart-btn" class="glow-btn filled full-width">TRY AGAIN</button>
-    </div>
-  </div>
+
 
   <script src="script.js"></script>
 </body>

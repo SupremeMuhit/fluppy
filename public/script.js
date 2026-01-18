@@ -518,6 +518,20 @@ document.querySelectorAll('.arrow-btn').forEach(btn => {
   });
 });
 
+// Mobile Bottom Bar Logic
+document.getElementById('mob-start-btn').addEventListener('click', startGame);
+
+document.getElementById('mob-settings-btn').addEventListener('click', () => {
+  const panel = document.getElementById('game-right');
+  panel.classList.toggle('open');
+  // Add a close tap handler? 
+});
+
+// Close Settings Panel when clicking outside (on canvas) if open?
+document.getElementById('game-left').addEventListener('click', () => {
+   document.getElementById('game-right').classList.remove('open');
+});
+
 document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', () => {
    // Reset inline style for safety
@@ -533,16 +547,6 @@ document.getElementById('close-about').addEventListener('click', () => {
   document.getElementById('about-panel').classList.remove('open');
 });
 
-// Custom Discord Button Logic
-document.querySelector('.social-btn.discord').addEventListener('click', (e) => {
-  e.preventDefault();
-  const text = "suprememuhit";
-  navigator.clipboard.writeText(text).then(() => {
-    alert("Copied 'suprememuhit' to clipboard!");
-  }).catch(err => {
-    console.error('Failed to copy: ', err);
-  });
-});
 
 // KEYBOARD Controls
 document.addEventListener('keydown', e => {
