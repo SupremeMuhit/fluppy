@@ -566,9 +566,15 @@ function gameOver() {
     if (game.score > saved) {
         localStorage.setItem('snakeHighScore', game.score);
         newHighScoreEl.classList.remove('hidden');
-        updateMenuHighScore();
+        updateMenuHighScore(); // Ensure this exists or is removed if redundant
     }
-    updateLeaderboard(game.score);
+    
+    // Generate Details String: "Medium - 20x20"
+    const diff = DIFFICULTIES[game.settings.diff];
+    const size = SIZES[game.settings.size].label;
+    const details = `${diff} - ${size}`;
+    
+    updateLeaderboard(game.score, details);
   } else {
     // Multiplayer Game Over logic?
     // cleanup
@@ -576,14 +582,17 @@ function gameOver() {
 }
 
 
-function updateLeaderboard(newScore) {
+function updateLeaderboard(newScore, details) {
   let entries = JSON.parse(localStorage.getItem('fluppyLeaderboard') || '[]');
   
+  // Convert old simple number format to object if needed
+  entries = entries.map(e => (typeof e === 'number') ? {score: e, details: 'Classic'} : e);
+
   // Add new score
   if(newScore > 0) {
-    entries.push(newScore);
-    entries.sort((a,b) => b-a); // Descending
-    entries = entries.slice(0, 10); // Top 10
+    entries.push({score: newScore, details: details});
+    entries.sort((a,b) => b.score - a.score); // Descending by score
+    entries = entries.slice(0, 10); // Keep Top 10 but display limited
     localStorage.setItem('fluppyLeaderboard', JSON.stringify(entries));
   }
   
@@ -591,19 +600,37 @@ function updateLeaderboard(newScore) {
 }
 
 function renderLeaderboard(entries) {
-  if(!entries) entries = JSON.parse(localStorage.getItem('fluppyLeaderboard') || '[]');
+  if(!entries) {
+     entries = JSON.parse(localStorage.getItem('fluppyLeaderboard') || '[]');
+     // normalize on load too
+     entries = entries.map(e => (typeof e === 'number') ? {score: e, details: 'Classic'} : e);
+  }
   
   const list = document.getElementById('leaderboard-list');
   list.innerHTML = '';
   
-  // Fill up to 10 slots, or just show what we have
-  // If empty, show some placeholders?
+  // Fill up to 10 slots
   const count = Math.max(entries.length, 5); 
   
-  for(let i=0; i<10; i++) {
-    const score = entries[i] !== undefined ? entries[i] : '-';
+  for(let i=0; i<entries.length; i++) {
+    const entry = entries[i];
+    const itemScore = entry ? entry.score : '-';
+    // Format: "Medium - 20x10 = 200"
+    // My list item structure: Rank | Details = Score
+    const itemDetails = entry ? entry.details : '';
+    
     const li = document.createElement('li');
-    li.innerHTML = `<span class="rank">${i+1}.</span> <span class="score">${score}</span>`;
+    if (entry) {
+        li.innerHTML = `
+          <div style="display:flex; width:100%; align-items:center;">
+             <span class="rank" style="width:20px; color:var(--primary-color)">${i+1}.</span> 
+             <span style="font-size:0.7rem; color:#aaa; margin-right:5px;">${itemDetails}</span>
+             <span style="text-align:right; flex-grow:1; color:#fff;">= ${itemScore}</span>
+          </div>`;
+    } else {
+        // Placeholder
+        li.innerHTML = `<span class="rank">${i+1}.</span> -`;
+    }
     list.appendChild(li);
   }
 }
