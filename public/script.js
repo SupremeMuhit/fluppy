@@ -607,18 +607,30 @@ async function startMpConnection(code) {
   statusDiv.classList.remove('hidden');
   
   mp.roomCode = code;
+  mp.isActive = true; // Mark active so we can cancel it
   statusText.textContent = "CHECKING ROOM...";
   
   try {
     const roomRef = ref(db, `rooms/${code}/players`);
-    const snapshot = await get(roomRef);
+    
+    // Add 5s Timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("TIMEOUT")), 5000)
+    );
+    
+    const snapshot = await Promise.race([
+      get(roomRef),
+      timeoutPromise
+    ]);
+
     const players = snapshot.val() || {};
     
     if (!players.p1) {
       mp.playerId = 'p1';
       statusText.textContent = "ROOM NOT FOUND. CREATING...";
       setTimeout(() => {
-         statusText.textContent = "WAITING FOR PLAYER 2...";
+         // Check if cancelled during wait
+         if(mp.isActive) statusText.textContent = "WAITING FOR PLAYER 2...";
       }, 1500);
     } else if (!players.p2) {
       mp.playerId = 'p2';
@@ -660,11 +672,20 @@ async function startMpConnection(code) {
     });
 
   } catch(e) {
-    console.error(e);
-    statusText.textContent = "CONNECTION FAILED";
+    console.error("MP Error:", e);
+    
+    let msg = "CONNECTION FAILED";
+    if (e.message === "TIMEOUT") msg = "CONNECTION TIMED OUT";
+    if (e.code === "PERMISSION_DENIED") msg = "DB RULES BLOCKED ACCESS";
+    
+    statusText.textContent = msg;
+    
     setTimeout(() => {
-      menuDiv.classList.remove('hidden');
-      statusDiv.classList.add('hidden');
+      // Return to menu
+      if (document.getElementById('mp-popup').style.display !== 'none') {
+         menuDiv.classList.remove('hidden');
+         statusDiv.classList.add('hidden');
+      }
     }, 2000);
   }
 
