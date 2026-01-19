@@ -1,11 +1,5 @@
 
-// ==========================================
-// FLUPPY SNAKE 2.0 ENGINE
-// + MULTIPLAYER (Firebase)
-// ==========================================
-
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-import { getDatabase, ref, set, onValue, get, child, onDisconnect, remove } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+// --- FIREBASE CONFIG (PLACEHOLDER) ---
 
 // --- IP LOGGING ---
 // Ping the worker to log the visit
@@ -29,9 +23,9 @@ const firebaseConfig = {
 
 let app, db;
 try {
-  app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
-  console.log("Firebase initialized");
+  app = firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  console.log("Firebase initialized (Compat mode)");
 } catch(e) {
   console.error("Firebase init error (Did you set config?):", e);
 }
@@ -50,8 +44,8 @@ const CONFIG = {
 };
 
 // DATA SETS
-const THEMES = ['NEON', 'CLASSIC', 'MINIMAL', 'BIO-HAZARD', 'MATRIX', 'SUNSET', 'CANDY', 'GAMEBOY'];
-const MODES = ['CLASSIC', 'SPEED', 'SURVIVAL', 'ZEN', 'CAMPAIGN', 'PORTAL', 'POISON'];
+const THEMES = ['NEON', 'CLASSIC', 'MINIMAL', 'BIO-HAZARD', 'MATRIX', 'SUNSET', 'CANDY', 'GAMEBOY', 'OCEAN', 'HELL', 'FOREST', 'VOID', 'SPACE'];
+const MODES = ['CLASSIC', 'SPEED', 'SURVIVAL', 'CAMPAIGN', 'PORTAL', 'POISON'];
 const MAPS = ['BOX', 'INFINITE', 'MAZE', 'OBSTACLES'];
 const DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD', 'EXTREME'];
 const SIZES = [
@@ -129,21 +123,19 @@ class Grid {
     // Responsive Sizing
     // Fit canvas into the game-left area
     const container = document.getElementById('game-left');
-    // available space
-    const maxWidth = container.clientWidth - 40;
-    const maxHeight = container.clientHeight - 100; // room for HUD
+    // available space (fallback to 400x400 if clientWidth is 0)
+    const maxWidth = (container.clientWidth || 400) - 40;
+    const maxHeight = (container.clientHeight || 400) - 100; // room for HUD
     
     const maxDimension = Math.min(maxWidth, maxHeight, 800);
     
     // Calculate cell size to best fit the grid into the box
-    // To keep it square-ish or ratio based
-    CONFIG.cellSize = Math.floor(maxDimension / Math.max(CONFIG.cols, CONFIG.rows));
+    CONFIG.cellSize = Math.floor(maxDimension / Math.max(CONFIG.cols, CONFIG.rows)) || 20;
     
     canvas.width = CONFIG.cols * CONFIG.cellSize;
     canvas.height = CONFIG.rows * CONFIG.cellSize;
     
-    // Update BG size for grid effect
-    canvas.style.backgroundSize = `${CONFIG.cellSize}px ${CONFIG.cellSize}px`;
+    // JS Grid drawing handles this now
   }
 
   static generateMap(type) {
@@ -287,7 +279,6 @@ function startGame() {
   let tickRate = CONFIG.baseSpeed[DIFFICULTIES[game.settings.diff]];
   
   if (modeType === 'SPEED') tickRate *= 0.7; // Faster in speed mode
-  if (modeType === 'ZEN') tickRate *= 1.5;   // Slower in Zen
   
   if (game.timer) clearInterval(game.timer);
   game.timer = setInterval(update, tickRate);
@@ -327,7 +318,7 @@ function update() {
          if (head.y < 0) head.y = CONFIG.rows - 1;
          if (head.y >= CONFIG.rows) head.y = 0;
       } else {
-        if (mode !== 'ZEN') return gameOver();
+        return gameOver();
       }
     }
   }
@@ -335,7 +326,7 @@ function update() {
   // 3. Collision Check
   // Self
   if (game.snake.some(s => s.x === head.x && s.y === head.y)) {
-    if (mode !== 'ZEN' && game.steps > 5) return gameOver();
+    if (game.steps > 5) return gameOver();
   }
   
   // Obstacles
@@ -392,8 +383,8 @@ function update() {
   // --- SYNC MULTIPLAYER ---
   if (mp.isActive && mp.roomCode && db) {
      // Write local state
-     const playerRef = ref(db, `rooms/${mp.roomCode}/players/${mp.playerId}`);
-     set(playerRef, {
+     const playerRef = db.ref(`rooms/${mp.roomCode}/players/${mp.playerId}`);
+     playerRef.set({
        snake: game.snake,
        score: game.score,
        active: game.active
@@ -407,13 +398,36 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
   const cs = CONFIG.cellSize;
-  const pd = 2; 
+  const pd = 1; // Minimal padding for a professional "aligned" look
   
   const style = getComputedStyle(document.body);
   const primary = style.getPropertyValue('--primary-color').trim();
   const accent = style.getPropertyValue('--accent-color').trim();
   const foodColor = style.getPropertyValue('--food-color').trim();
   const poisonColor = style.getPropertyValue('--poison-color').trim();
+  const wallColor = style.getPropertyValue('--wall-color').trim();
+  const gridColor = style.getPropertyValue('--grid-color').trim();
+
+  // 1. Draw Grid (JS based for perfect alignment)
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= CONFIG.cols; x++) {
+    ctx.beginPath();
+    ctx.moveTo(x * cs, 0);
+    ctx.lineTo(x * cs, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= CONFIG.rows; y++) {
+    ctx.beginPath();
+    ctx.moveTo(0, y * cs);
+    ctx.lineTo(canvas.width, y * cs);
+    ctx.stroke();
+  }
+
+  // 2. Draw WALL Border
+  ctx.strokeStyle = wallColor;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
   // Draw Obstacles
   ctx.fillStyle = '#555';
@@ -504,7 +518,7 @@ function spawnFood() {
     };
     const hitSnake = game.snake.some(s => s.x === pos.x && s.y === pos.y);
     const hitWall = game.obstacles.some(o => o.x === pos.x && o.y === pos.y);
-    const hitPoison = game.poison && game.poison.x === pos.x && game.poison.y === pos.x;
+    const hitPoison = game.poison && game.poison.x === pos.x && game.poison.y === pos.y;
     if (!hitSnake && !hitWall && !hitPoison) valid = true;
   }
   return pos;
@@ -763,22 +777,24 @@ async function startMpAction(action, code, settings = null) {
 
   try {
      const roomBase = `rooms/${code}`;
+     const dbRef = db.ref();
      
      if (action === 'CREATE') {
          // Check if exists
-         const snap = await get(ref(db, roomBase + '/players/p1'));
+         const snap = await dbRef.child(roomBase + '/players/p1').get();
          if (snap.exists()) {
              alert("Room already exists! Try another code.");
              return switchMpView('mp-view-create');
          }
          
          // Set Settings
-         await set(ref(db, roomBase + '/settings'), settings);
+         await db.ref(roomBase + '/settings').set(settings);
          
          // Join as P1
          mp.playerId = 'p1';
-         await set(ref(db, roomBase + '/players/p1'), { active: true, snake: [] });
-         onDisconnect(ref(db, roomBase + '/players/p1')).remove();
+         const p1Ref = db.ref(roomBase + '/players/p1');
+         await p1Ref.set({ active: true, snake: [] });
+         p1Ref.onDisconnect().remove();
          
          // Apply Local Settings
          game.settings.map = MAPS.indexOf(settings.map);
@@ -788,7 +804,7 @@ async function startMpAction(action, code, settings = null) {
 
      } else {
          // JOIN
-         const snap = await get(ref(db, roomBase + '/settings'));
+         const snap = await dbRef.child(roomBase + '/settings').get();
          if (!snap.exists()) {
              alert("Room does not exist!");
              return switchMpView('mp-view-join');
@@ -797,15 +813,16 @@ async function startMpAction(action, code, settings = null) {
          const hostSettings = snap.val();
          
          // Check P2 slot
-         const p2Snap = await get(ref(db, roomBase + '/players/p2'));
+         const p2Snap = await dbRef.child(roomBase + '/players/p2').get();
          if (p2Snap.exists()) {
              alert("Room full!");
              return switchMpView('mp-view-join');
          }
          
          mp.playerId = 'p2';
-         await set(ref(db, roomBase + '/players/p2'), { active: true, snake: [] });
-         onDisconnect(ref(db, roomBase + '/players/p2')).remove();
+         const p2Ref = db.ref(roomBase + '/players/p2');
+         await p2Ref.set({ active: true, snake: [] });
+         p2Ref.onDisconnect().remove();
          
          // Sync Local Settings
          game.settings.map = MAPS.indexOf(hostSettings.map);
@@ -821,7 +838,7 @@ async function startMpAction(action, code, settings = null) {
      
      // LISTEN FOR OPPONENT
      const otherId = mp.playerId === 'p1' ? 'p2' : 'p1';
-     onValue(ref(db, `rooms/${code}/players/${otherId}`), (snap) => {
+     db.ref(`rooms/${code}/players/${otherId}`).on('value', (snap) => {
          const data = snap.val();
          if (data && data.active) {
              mp.remoteSnake = data.snake || [];
@@ -868,7 +885,33 @@ function updateSettingsUI() {
 
 function drawPreview() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // Just clear it so the Grid CSS is visible
+  
+  const cs = CONFIG.cellSize;
+  const style = getComputedStyle(document.body);
+  const gridColor = style.getPropertyValue('--grid-color').trim();
+  const wallColor = style.getPropertyValue('--wall-color').trim();
+
+  // Draw Grid
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= CONFIG.cols; x++) {
+    ctx.beginPath();
+    ctx.moveTo(x * cs, 0);
+    ctx.lineTo(x * cs, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= CONFIG.rows; y++) {
+    ctx.beginPath();
+    ctx.moveTo(0, y * cs);
+    ctx.lineTo(canvas.width, y * cs);
+    ctx.stroke();
+  }
+
+  // Draw Wall
+  ctx.strokeStyle = wallColor;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
   document.getElementById('preview-overlay').style.opacity = '1';
 }
 
@@ -959,6 +1002,14 @@ document.getElementById('close-about').addEventListener('click', () => {
   document.getElementById('about-panel').classList.remove('open');
 });
 
+document.getElementById('help-btn').addEventListener('click', () => {
+  document.getElementById('help-panel').classList.add('open');
+});
+
+document.getElementById('close-help').addEventListener('click', () => {
+  document.getElementById('help-panel').classList.remove('open');
+});
+
 // Custom Discord Button Logic
 document.querySelector('.social-btn.discord').addEventListener('click', (e) => {
   e.preventDefault();
@@ -974,6 +1025,7 @@ document.querySelector('.social-btn.discord').addEventListener('click', (e) => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.getElementById('about-panel').classList.remove('open');
+    document.getElementById('help-panel').classList.remove('open');
     return;
   }
   if (!game.active && e.key === 'Enter') {

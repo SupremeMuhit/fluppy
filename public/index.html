@@ -8,6 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase Compat Scripts for non-module support (file:// protocol) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
   
@@ -202,7 +207,10 @@
               </div>
             </div>
 
-            <button id="start-btn" class="glow-btn full-width">START GAME</button>
+            <div class="action-buttons" style="display: flex; gap: 10px;">
+              <button id="start-btn" class="glow-btn filled" style="flex: 2;">START GAME</button>
+              <button id="help-btn" class="glow-btn outline" style="flex: 1;">HELP</button>
+            </div>
             <button id="mp-btn" class="glow-btn outline full-width" style="margin-top: 10px; position: relative;">
               MULTIPLAYER 
               <span style="font-size: 0.5rem; vertical-align: super; color: var(--accent-color); position: absolute; top: 5px; right: 10px;">BETA</span>
@@ -280,11 +288,52 @@
     <button id="mob-settings-btn" class="glow-btn outline">⚙️</button>
   </div>
 
-  <!-- SLIDING ABOUT PANEL -->
+  <!-- SLIDING HELP PANEL -->
+  <div id="help-panel">
+    <div class="help-content">
+      <h2>HOW TO PLAY</h2>
+      
+      <h3>CONTROLS</h3>
+      <div class="help-section">
+        <p><strong>PC:</strong> WASD or Arrow Keys to move. Enter to Start/Restart.</p>
+        <p><strong>Mobile:</strong> Swipe on screen or use the D-Pad.</p>
+      </div>
+
+      <h3>GAME MODES</h3>
+      <div class="help-grid" style="font-size: 0.8rem; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="mode-item"><strong>CLASSIC:</strong> Standard arcade fun. Grow as you eat.</div>
+        <div class="mode-item"><strong>SPEED:</strong> High velocity challenge. Reflects fast.</div>
+        <div class="mode-item"><strong>SURVIVAL:</strong> Obstacles appear every time you eat!</div>
+        <div class="mode-item"><strong>CAMPAIGN:</strong> Speed increases every 50 points.</div>
+        <div class="mode-item"><strong>PORTAL:</strong> Walls wrap you to the other side.</div>
+        <div class="mode-item"><strong>POISON:</strong> Avoid the skull dots! (-25 points)</div>
+      </div>
+
+      <h3>TIPS</h3>
+      <ul style="font-size: 0.8rem; color: var(--text-color); opacity: 0.8;">
+        <li>Watch the wall color! It changes with themes to warn you.</li>
+        <li>In Survival, plan your path—the map gets crowded fast.</li>
+        <li>Speed mode is for true snake masters!</li>
+      </ul>
+
+      <div class="close-wrapper">
+        <button id="close-help" class="glow-btn small full-width">GOT IT!</button>
+      </div>
+    </div>
+  </div>
+
   <div id="about-panel">
     <div class="about-content">
       <h2>ABOUT FLUPPY SNAKE</h2>
-      <p>A retro-futuristic snake game built for pure arcade fun.</p>
+      <p>A retro-futuristic snake game built for pure arcade fun. Experience the evolution of a classic with modern professional themes and challenging modes.</p>
+
+      <h3>HOW TO PLAY</h3>
+      <div class="how-to-play" style="font-size: 0.8rem; line-height: 1.4; color: var(--text-color); opacity: 0.9;">
+        <p><strong>Controls:</strong> Use WASD or Arrow Keys on PC. Swipe or use the D-Pad on mobile.</p>
+        <p><strong>Objective:</strong> Eat food (colored dots) to grow and earn points. Avoid hitting the walls or your own tail.</p>
+        <p><strong>Modes:</strong> Explore different modes like Speed, Survival, and Zen for unique challenges.</p>
+        <p><strong>Pro Tip:</strong> The border wall is color-coded to your theme—stay away to keep your streak alive!</p>
+      </div>
       
       <h3>CREDITS</h3>
       <ul style="font-size: 0.8rem; list-style: none;">
@@ -322,6 +371,6 @@
 
 
 
-  <script type="module" src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
