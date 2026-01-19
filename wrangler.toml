@@ -11,6 +11,3 @@ id = "f8102ad49b714af198d7c8e4b6c3fc22"
 enabled = true
 invocation_logs = true
 
-[[migrations]]
-tag = "cleanup-gameroom-do"
-deleted_classes = ["GameRoom"]
