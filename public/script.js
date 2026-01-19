@@ -1,7 +1,31 @@
 
 // ==========================================
 // FLUPPY SNAKE 2.0 ENGINE
+// + MULTIPLAYER (Firebase)
 // ==========================================
+
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, get, child, onDisconnect, remove } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+// --- FIREBASE CONFIG (PLACEHOLDER) ---
+// REPLACE THIS WITH YOUR OWN FIREBASE CONFIG FROM CONSOLE
+const firebaseConfig = {
+  apiKey: "AIzaSyDCIKT3APSp-vDSoht0pdCHExitPf0KrjE",
+  authDomain: "fluppy-snake.firebaseapp.com",
+  projectId: "fluppy-snake",
+  storageBucket: "fluppy-snake.firebasestorage.app",
+  messagingSenderId: "1050595465276",
+  appId: "1:1050595465276:web:a9f3d53b2d639d287c8b39"
+};
+
+let app, db;
+try {
+  app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+  console.log("Firebase initialized");
+} catch(e) {
+  console.error("Firebase init error (Did you set config?):", e);
+}
 
 const CONFIG = {
   cols: 25,
@@ -49,6 +73,19 @@ let game = {
     size: 2  // Default 20x20 (Index 2 for array)
   }
 };
+
+// MULTIPLAYER STATE
+let mp = {
+  isActive: false,
+  roomCode: null,
+  playerId: null, // 'p1' or 'p2'
+  remoteSnake: [],
+  remoteDir: {x:0,y:0},
+  isWaiting: false,
+  connected: false
+};
+
+
 // Set initial default size
 game.settings.size = 3; // 25x25
 
@@ -124,16 +161,31 @@ class Grid {
 function startGame() {
   document.getElementById('preview-overlay').style.opacity = '0';
   document.getElementById('game-over').classList.add('hidden');
+  document.getElementById('mp-popup').classList.add('hidden'); // Ensure mp popup is gone
   
   Grid.init();
   
   // Logic Setup
   const centerX = Math.floor(CONFIG.cols / 2);
   const centerY = Math.floor(CONFIG.rows / 2);
-  game.snake = [{x: centerX, y: centerY}, {x: centerX-1, y: centerY}, {x: centerX-2, y: centerY}];
   
-  game.dir = {x: 1, y: 0};
-  game.nextDir = {x: 1, y: 0};
+  // DIFFERENT SPAWNS FOR MP
+  if (mp.isActive) {
+    if (mp.playerId === 'p1') {
+      game.snake = [{x: 5, y: centerY}, {x: 4, y: centerY}, {x: 3, y: centerY}];
+      game.dir = {x: 1, y: 0};
+      game.nextDir = {x: 1, y: 0};
+    } else {
+      game.snake = [{x: CONFIG.cols - 6, y: centerY}, {x: CONFIG.cols - 5, y: centerY}, {x: CONFIG.cols - 4, y: centerY}];
+      game.dir = {x: -1, y: 0};
+      game.nextDir = {x: -1, y: 0};
+    }
+  } else {
+    game.snake = [{x: centerX, y: centerY}, {x: centerX-1, y: centerY}, {x: centerX-2, y: centerY}];
+    game.dir = {x: 1, y: 0};
+    game.nextDir = {x: 1, y: 0};
+  }
+  
   game.score = 0;
   game.active = true;
   game.poison = null;
@@ -153,7 +205,7 @@ function startGame() {
   game.obstacles = game.obstacles.filter(o => Math.abs(o.x - cx) > 4 || Math.abs(o.y - cy) > 4);
 
   const modeType = MODES[game.settings.mode];
-  modeEl.textContent = `${modeType} (${DIFFICULTIES[game.settings.diff]})`;
+  modeEl.textContent = mp.isActive ? `MULTIPLAYER (${mp.roomCode})` : `${modeType} (${DIFFICULTIES[game.settings.diff]})`;
   
   updateScore(0);
   
@@ -265,6 +317,17 @@ function update() {
     // Didn't eat
     game.snake.pop();
   }
+  
+  // --- SYNC MULTIPLAYER ---
+  if (mp.isActive && mp.roomCode && db) {
+     // Write local state
+     const playerRef = ref(db, `rooms/${mp.roomCode}/players/${mp.playerId}`);
+     set(playerRef, {
+       snake: game.snake,
+       score: game.score,
+       active: game.active
+     });
+  }
 
   draw();
 }
@@ -315,9 +378,9 @@ function draw() {
     ctx.fillText('×', game.poison.x*cs + cs/2, game.poison.y*cs + cs/2);
   }
 
-  // Draw Snake
+  // Draw LOCAL Snake
   game.snake.forEach((seg, i) => {
-    ctx.fillStyle = i === 0 ? primary : accent;
+    ctx.fillStyle = i === 0 ? primary : accent; // Head vs Body
     ctx.shadowBlur = i === 0 ? 10 : 0;
     ctx.shadowColor = primary;
     ctx.fillRect(seg.x * cs + pd, seg.y * cs + pd, cs - pd*2, cs - pd*2);
@@ -331,6 +394,28 @@ function draw() {
       ctx.fillRect(seg.x*cs+cs*0.6, seg.y*cs+cs*0.2, eyeSize, eyeSize);
     }
   });
+
+  // Draw REMOTE Snake
+  if (mp.isActive && mp.remoteSnake && mp.remoteSnake.length > 0) {
+    // Use a distinct color for P2/Opponent (e.g., Red or opposite of theme)
+    // For now, use a fixed color or variation of accent
+    const remoteColor = '#ff5555'; // Reddish for opponent
+    
+    mp.remoteSnake.forEach((seg, i) => {
+      ctx.fillStyle = remoteColor;
+      ctx.shadowBlur = i === 0 ? 10 : 0;
+      ctx.shadowColor = remoteColor;
+      ctx.fillRect(seg.x * cs + pd, seg.y * cs + pd, cs - pd*2, cs - pd*2);
+      
+      if (i === 0) {
+          ctx.fillStyle = '#fff';
+          const eyeSize = cs/5;
+          ctx.fillRect(seg.x*cs+cs*0.2, seg.y*cs+cs*0.2, eyeSize, eyeSize);
+          ctx.fillRect(seg.x*cs+cs*0.6, seg.y*cs+cs*0.2, eyeSize, eyeSize);
+      }
+    });
+  }
+
   ctx.shadowBlur = 0;
 }
 
@@ -411,16 +496,18 @@ function gameOver() {
   // Hide High Score message initially
   newHighScoreEl.classList.add('hidden');
 
-  const saved = parseInt(localStorage.getItem('snakeHighScore')) || 0;
-  if (game.score > saved) {
-    localStorage.setItem('snakeHighScore', game.score);
-    // ONLY show if it's actually a new high score
-    newHighScoreEl.classList.remove('hidden');
-    updateMenuHighScore();
+  if (!mp.isActive) { // Only track high score in Single Player
+    const saved = parseInt(localStorage.getItem('snakeHighScore')) || 0;
+    if (game.score > saved) {
+        localStorage.setItem('snakeHighScore', game.score);
+        newHighScoreEl.classList.remove('hidden');
+        updateMenuHighScore();
+    }
+    updateLeaderboard(game.score);
+  } else {
+    // Multiplayer Game Over logic?
+    // cleanup
   }
-  
-  // Leaderboard Logic
-  updateLeaderboard(game.score);
 }
 
 
@@ -456,13 +543,114 @@ function renderLeaderboard(entries) {
   }
 }
 
-function pingLogger() {
-  fetch('https://fluppy.suprememuhit.workers.dev/ping', {
-    mode: 'cors',
-    cache: 'no-cache'
-  }).catch(e => console.log("Logger ping failed", e));
+// ==========================================
+// MP LOGIC
+// ==========================================
+
+function initMultiplayer() {
+  const mpBtn = document.getElementById('mp-btn');
+  const mpPopup = document.getElementById('mp-popup');
+  const joinBtn = document.getElementById('join-room-btn');
+  const cancelBtn = document.getElementById('cancel-mp-btn');
+  const roomInput = document.getElementById('room-code-input');
+  const statusDiv = document.getElementById('mp-status');
+  const menuDiv = document.getElementById('mp-menu');
+  const statusText = document.getElementById('mp-status-text');
+  
+  mpBtn.addEventListener('click', () => {
+    mpPopup.classList.remove('hidden');
+    mpPopup.style.display = 'block';
+    menuDiv.classList.remove('hidden');
+    statusDiv.classList.add('hidden');
+  });
+  
+  cancelBtn.addEventListener('click', () => {
+     mpPopup.classList.add('hidden'); // Use class
+     mpPopup.style.display = 'none';
+  });
+  
+  joinBtn.addEventListener('click', () => {
+    const code = roomInput.value;
+    if(code.length !== 5) {
+      alert("Please enter a 5-digit code!");
+      return;
+    }
+    startMpConnection(code);
+  });
 }
-pingLogger();
+
+async function startMpConnection(code) {
+  if (!db) {
+    alert("Database not ready! Check config.");
+    return;
+  }
+  
+  const menuDiv = document.getElementById('mp-menu');
+  const statusDiv = document.getElementById('mp-status');
+  const statusText = document.getElementById('mp-status-text');
+  
+  menuDiv.classList.add('hidden');
+  statusDiv.classList.remove('hidden');
+  
+  mp.roomCode = code;
+  statusText.textContent = "CHECKING ROOM...";
+  
+  const roomRef = ref(db, `rooms/${code}/players`);
+  const snapshot = await get(roomRef);
+  const players = snapshot.val() || {};
+  
+  if (!players.p1) {
+    mp.playerId = 'p1';
+    statusText.textContent = "HOSTING ROOM... WAITING FOR P2";
+  } else if (!players.p2) {
+    mp.playerId = 'p2';
+    statusText.textContent = "CONNECTING AS P2...";
+  } else {
+    alert("Room Full!");
+    menuDiv.classList.remove('hidden');
+    statusDiv.classList.add('hidden');
+    return;
+  }
+  
+  // Register existence
+  const myRef = ref(db, `rooms/${code}/players/${mp.playerId}`);
+  onDisconnect(myRef).remove(); // Auto-cleanup
+  await set(myRef, { active: true, snake: [] });
+  
+  mp.isActive = true;
+  mp.connected = true;
+  
+  // Listen for OTHER player
+  const otherId = mp.playerId === 'p1' ? 'p2' : 'p1';
+  const otherRef = ref(db, `rooms/${code}/players/${otherId}`);
+  
+  onValue(otherRef, (snap) => {
+    const data = snap.val();
+    if (data && data.active) {
+       // Player connected!
+       mp.remoteSnake = data.snake || [];
+       
+       // If both connected, START?
+       if (document.getElementById('mp-popup').style.display !== 'none') {
+         // Auto start if we were waiting
+         if (mp.playerId === 'p1' || mp.playerId === 'p2') { 
+            // Simple check: if I have data from other, we are good?
+            // Really we should wait for both presence?
+            // Simpler: Just start game if not started
+            if (!game.active) {
+               startGame();
+            }
+         }
+       }
+    } else {
+       mp.remoteSnake = [];
+    }
+  });
+
+}
+
+initMultiplayer();
+
 
 // ==========================================
 // UI & INPUTS
@@ -532,10 +720,17 @@ document.getElementById('game-left').addEventListener('click', () => {
    document.getElementById('game-right').classList.remove('open');
 });
 
-document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('start-btn').addEventListener('click', () => {
+  mp.isActive = false; // Force single player
+  startGame();
+});
+
 document.getElementById('restart-btn').addEventListener('click', () => {
    // Reset inline style for safety
    document.getElementById('game-over').style.display = 'none';
+   if (mp.isActive) {
+     // Mp restart logic?
+   }
    startGame();
 });
 

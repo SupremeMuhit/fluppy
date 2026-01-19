@@ -50,6 +50,22 @@
               <button id="restart-btn" class="glow-btn filled full-width">TRY AGAIN</button>
             </div>
           </div>
+
+          <!-- POPUP: MULTIPLAYER SETUP -->
+          <div id="mp-popup" class="hidden" style="display: none;">
+            <h2>MULTIPLAYER</h2>
+            <div id="mp-menu">
+              <p>Enter 5-digit Room Code</p>
+              <input type="number" id="room-code-input" placeholder="12345" max="99999" style="padding: 10px; width: 100%; margin: 10px 0; background: #222; color: #fff; border: 1px solid var(--primary-color); text-align: center; font-family: var(--font-display);">
+              <button id="join-room-btn" class="glow-btn filled full-width">JOIN ROOM</button>
+              <button id="cancel-mp-btn" class="glow-btn outline full-width" style="margin-top: 10px;">CANCEL</button>
+            </div>
+            <div id="mp-status" class="hidden">
+              <p id="mp-status-text">CONNECTING...</p>
+              <div class="loader" style="margin: 20px auto;"></div>
+              <button id="cancel-wait-btn" class="glow-btn outline small full-width">CANCEL</button>
+            </div>
+          </div>
         </div>
 
         <!-- Mobile Controls (Visible only on touch) -->
@@ -127,6 +143,7 @@
         </div>
 
         <button id="start-btn" class="glow-btn full-width">START GAME</button>
+        <button id="mp-btn" class="glow-btn outline full-width" style="margin-top: 10px;">MULTIPLAYER</button>
         
         <!-- LEADERBOARD (Top 10) -->
         <div class="leaderboard-panel">
@@ -198,6 +215,6 @@
 
 
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
