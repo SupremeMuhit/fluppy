@@ -10,12 +10,12 @@ import { getDatabase, ref, set, onValue, get, child, onDisconnect, remove } from
 // --- FIREBASE CONFIG (PLACEHOLDER) ---
 // REPLACE THIS WITH YOUR OWN FIREBASE CONFIG FROM CONSOLE
 const firebaseConfig = {
-  apiKey: "AIzaSyDCIKT3APSp-vDSoht0pdCHExitPf0KrjE",
-  authDomain: "fluppy-snake.firebaseapp.com",
-  projectId: "fluppy-snake",
-  storageBucket: "fluppy-snake.firebasestorage.app",
-  messagingSenderId: "1050595465276",
-  appId: "1:1050595465276:web:a9f3d53b2d639d287c8b39"
+  apiKey: "AIzaSyDCIKT3APSp-vDSoht0pdCHExitPf0KrjE", // Please Dont Steal My API
+  authDomain: "fluppy-snake.firebaseapp.com", // Please Dont Steal My API
+  projectId: "fluppy-snake", // Please Dont Steal My API
+  storageBucket: "fluppy-snake.firebasestorage.app", // Please Dont Steal My API
+  messagingSenderId: "1050595465276", // Please Dont Steal My API
+  appId: "1:1050595465276:web:a9f3d53b2d639d287c8b39" // Please Dont Steal My API
 };
 
 let app, db;
@@ -206,7 +206,8 @@ function startGame() {
   document.getElementById('game-over').classList.add('hidden');
   document.getElementById('mp-popup').classList.add('hidden'); // Ensure mp popup is gone
   
-  toggleSidebar('GAME');
+  if (mp.isActive) toggleSidebar('GAME');
+  else toggleSidebar('MENU'); // Ensure standard sidebar for Single Player
   Grid.init();
   
   // Logic Setup
@@ -509,7 +510,12 @@ function addRandomObstacle() {
 
 function updateScore(s) {
   scoreEl.textContent = s;
-  document.getElementById('game-score-large').textContent = s;
+  
+  // In MP, update specific labels
+  if (mp.isActive && mp.playerId) {
+    document.getElementById('score-p1').textContent = mp.playerId === 'p1' ? s : (mp.remoteScore || 0);
+    document.getElementById('score-p2').textContent = mp.playerId === 'p2' ? s : (mp.remoteScore || 0);
+  }
 }
 
 function showFloatingText(text, pos) {
@@ -602,9 +608,51 @@ function renderLeaderboard(entries) {
   }
 }
 
-// ==========================================
-// MP LOGIC
-// ==========================================
+// CREATE ROOM LOCAL STATE
+const createSettings = {
+  mode: 'PVP',
+  map: 'BOX',
+  diff: 1
+};
+
+const MP_MODES = ['PVP', 'FRIENDLY'];
+const MP_MAPS = ['BOX', 'INFINITE'];
+
+function updateCreateUI() {
+  document.getElementById('mp-create-mode-val').textContent = createSettings.mode;
+  document.getElementById('mp-create-map-val').textContent = createSettings.map === 'BOX' ? 'WALLED' : 'INFINITE';
+  document.getElementById('mp-create-diff-val').textContent = DIFFICULTIES[createSettings.diff];
+}
+
+function handleCreateSetting(type, dir) {
+   if (type === 'mode') {
+     let idx = MP_MODES.indexOf(createSettings.mode);
+     if (dir === 'next') idx = (idx + 1) % MP_MODES.length;
+     else idx = (idx - 1 + MP_MODES.length) % MP_MODES.length;
+     createSettings.mode = MP_MODES[idx];
+   }
+   if (type === 'map') {
+     let idx = MP_MAPS.indexOf(createSettings.map);
+     if (dir === 'next') idx = (idx + 1) % MP_MAPS.length;
+     else idx = (idx - 1 + MP_MAPS.length) % MP_MAPS.length;
+     createSettings.map = MP_MAPS[idx];
+   }
+   if (type === 'diff') {
+     let idx = createSettings.diff;
+     if (dir === 'next') idx = (idx + 1) % DIFFICULTIES.length;
+     else idx = (idx - 1 + DIFFICULTIES.length) % DIFFICULTIES.length;
+     createSettings.diff = idx;
+   }
+   updateCreateUI();
+}
+
+// Bind Create Room Selectors
+document.getElementById('btn-create-mode-prev').addEventListener('click', () => handleCreateSetting('mode', 'prev'));
+document.getElementById('btn-create-mode-next').addEventListener('click', () => handleCreateSetting('mode', 'next'));
+document.getElementById('btn-create-map-prev').addEventListener('click', () => handleCreateSetting('map', 'prev'));
+document.getElementById('btn-create-map-next').addEventListener('click', () => handleCreateSetting('map', 'next'));
+document.getElementById('btn-create-diff-prev').addEventListener('click', () => handleCreateSetting('diff', 'prev'));
+document.getElementById('btn-create-diff-next').addEventListener('click', () => handleCreateSetting('diff', 'next'));
 
 function switchMpView(viewId) {
   ['mp-view-select', 'mp-view-create', 'mp-view-join', 'mp-status'].forEach(id => {
@@ -618,7 +666,10 @@ function initMultiplayer() {
   const mpPopup = document.getElementById('mp-popup');
   
   // Main Menu Buttons
-  document.getElementById('btn-select-create').addEventListener('click', () => switchMpView('mp-view-create'));
+  document.getElementById('btn-select-create').addEventListener('click', () => {
+    updateCreateUI();
+    switchMpView('mp-view-create');
+  });
   document.getElementById('btn-select-join').addEventListener('click', () => switchMpView('mp-view-join'));
   document.getElementById('btn-mp-close').addEventListener('click', () => {
     mpPopup.classList.add('hidden');
@@ -635,13 +686,8 @@ function initMultiplayer() {
     const code = document.getElementById('mp-create-code').value;
     if(code.length !== 5) return alert("Enter 5-digit code");
     
-    const settings = {
-        mode: document.getElementById('mp-create-mode').value,
-        map: document.getElementById('mp-create-map').value,
-        diff: parseInt(document.getElementById('mp-create-diff').value)
-    };
-    
-    startMpAction('CREATE', code, settings);
+    // Use local createSettings
+    startMpAction('CREATE', code, createSettings);
   });
 
   // JOIN Action
@@ -697,7 +743,6 @@ async function startMpAction(action, code, settings = null) {
          // Apply Local Settings
          game.settings.map = MAPS.indexOf(settings.map);
          game.settings.diff = settings.diff;
-         // MP Mode override? For now we just use the synced settings logic in update
          
          document.getElementById('mp-status-text').textContent = "WAITING FOR P2...";
 
@@ -740,11 +785,14 @@ async function startMpAction(action, code, settings = null) {
          const data = snap.val();
          if (data && data.active) {
              mp.remoteSnake = data.snake || [];
+             if (data.score !== undefined) mp.remoteScore = data.score;
+             
              if (!game.active && document.getElementById('mp-popup').style.display !== 'none') {
                  startGame();
              }
          } else {
              mp.remoteSnake = [];
+             mp.remoteScore = 0;
          }
      });
 
@@ -756,7 +804,6 @@ async function startMpAction(action, code, settings = null) {
 }
 
 initMultiplayer();
-
 
 // ==========================================
 // UI & INPUTS
@@ -830,6 +877,11 @@ function exitGame() {
 }
 
 document.getElementById('exit-btn').addEventListener('click', exitGame);
+
+// About Btn in MP
+document.getElementById('about-btn-mp').addEventListener('click', () => {
+    document.getElementById('about-panel').classList.add('open');
+});
 
 // Mobile Bottom Bar Logic
 document.getElementById('mob-start-btn').addEventListener('click', startGame);

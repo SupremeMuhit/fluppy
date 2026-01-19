@@ -64,32 +64,37 @@
 
             <!-- VIEW 2: CREATE ROOM -->
             <div id="mp-view-create" class="hidden">
-               <div class="setting-group">
+               <!-- Custom Selectors matching Main Menu -->
+               <div class="setting-group" style="margin-bottom: 10px;">
                  <label>GAME MODE</label>
-                 <select id="mp-create-mode" style="width:100%; background:#222; color:#fff; border:1px solid var(--primary-color); padding:5px;">
-                   <option value="PVP">PVP (Head Collision Kills)</option>
-                   <option value="FRIENDLY">FRIENDLY (No Collision)</option>
-                 </select>
+                 <div class="selector">
+                   <button class="arrow-btn" id="btn-create-mode-prev">◄</button>
+                   <span class="value" id="mp-create-mode-val" data-val="PVP">PVP</span>
+                   <button class="arrow-btn" id="btn-create-mode-next">►</button>
+                 </div>
                </div>
-               <div class="setting-group">
+               
+               <div class="setting-group" style="margin-bottom: 10px;">
                  <label>MAP TYPE</label>
-                 <select id="mp-create-map" style="width:100%; background:#222; color:#fff; border:1px solid var(--primary-color); padding:5px;">
-                   <option value="BOX">WALLED</option>
-                   <option value="INFINITE">INFINITE</option>
-                 </select>
+                 <div class="selector">
+                   <button class="arrow-btn" id="btn-create-map-prev">◄</button>
+                   <span class="value" id="mp-create-map-val" data-val="BOX">WALLED</span>
+                   <button class="arrow-btn" id="btn-create-map-next">►</button>
+                 </div>
                </div>
-               <div class="setting-group">
+               
+               <div class="setting-group" style="margin-bottom: 10px;">
                  <label>DIFFICULTY</label>
-                 <select id="mp-create-diff" style="width:100%; background:#222; color:#fff; border:1px solid var(--primary-color); padding:5px;">
-                   <option value="1">MEDIUM</option>
-                   <option value="2">HARD</option>
-                   <option value="3">EXTREME</option>
-                   <option value="0">EASY</option>
-                 </select>
+                 <div class="selector">
+                   <button class="arrow-btn" id="btn-create-diff-prev">◄</button>
+                   <span class="value" id="mp-create-diff-val" data-val="1">MEDIUM</span>
+                   <button class="arrow-btn" id="btn-create-diff-next">►</button>
+                 </div>
                </div>
+
                <div class="setting-group">
                  <label>ROOM CODE (5-Digits)</label>
-                 <input type="number" id="mp-create-code" placeholder="12345" max="99999" style="width:100%; background:#222; color:#fff; border:1px solid var(--primary-color); text-align:center; padding:8px;">
+                 <input type="number" id="mp-create-code" placeholder="12345" max="99999" style="width:100%; background:#222; color:#fff; border:1px solid var(--primary-color); text-align:center; padding:8px; font-family: var(--font-display);">
                </div>
                <button id="btn-do-create" class="glow-btn filled full-width" style="margin-top:15px;">CREATE & HOST</button>
                <button class="btn-back glow-btn outline small full-width" style="margin-top:10px;">BACK</button>
@@ -132,7 +137,7 @@
       </div>
 
       <div class="sidebar-content">
-        <!-- MENU PANEL -->
+        <!-- MENU PANEL (Default Single Player & Menu) -->
         <div id="sidebar-menu">
             <div class="settings-grid">
               
@@ -203,34 +208,47 @@
               <span style="font-size: 0.5rem; vertical-align: super; color: var(--accent-color); position: absolute; top: 5px; right: 10px;">BETA</span>
             </button>
             
-            <button id="about-btn" class="glow-btn outline full-width" style="margin-top: 10px;">ABOUT & CREDITS</button>
-        </div>
-
-        <!-- IN-GAME PANEL (Hidden by default) -->
-        <div id="sidebar-game" class="hidden" style="display: none;">
-            <div class="game-hud-large">
-                <div class="hud-box">
-                    <label>SCORE</label>
-                    <div id="game-score-large" class="hud-value">0</div>
-                </div>
-                <div class="hud-box">
-                    <label>TIME</label>
-                    <div id="game-time-large" class="hud-value">--:--</div>
-                </div>
-            </div>
-            
-            <div class="leaderboard-panel expanded">
+            <!-- LEADERBOARD for Single Player -->
+            <div class="leaderboard-panel" style="margin-top: 20px;">
               <h3>LEADERBOARD</h3>
               <ul id="leaderboard-list">
                  <li><span class="rank">1.</span> <span class="score">-</span></li>
               </ul>
             </div>
+            
+            <button id="about-btn" class="glow-btn outline full-width" style="margin-top: 10px;">ABOUT & CREDITS</button>
+        </div>
 
-            <div class="controls-hint-sidebar">
-                <p>EXIT: Press Button Below</p>
+        <!-- MULTIPLAYER GAME PANEL (Only for MP) -->
+        <div id="sidebar-game" class="hidden" style="display: none;">
+            <h3 style="text-align:center; color:var(--accent-color); margin-bottom:20px;">MULTIPLAYER</h3>
+            
+            <div class="hud-box" style="margin-bottom: 20px;">
+                <label>TIME REMAINING</label>
+                <div id="game-time-large" class="hud-value" style="font-size: 3rem;">--:--</div>
             </div>
 
-            <button id="exit-btn" class="glow-btn filled full-width" style="background: var(--poison-color); border-color: var(--poison-color); margin-top: auto;">EXIT GAME</button>
+            <div class="game-hud-large">
+                <div class="hud-box" style="border-color: var(--primary-color);">
+                    <label style="color:var(--primary-color)">YOU (P1)</label>
+                    <div id="score-p1" class="hud-value">0</div>
+                </div>
+                <div class="hud-box" style="border-color: #ff5555;">
+                    <label style="color:#ff5555">OPPONENT</label>
+                    <div id="score-p2" class="hud-value">0</div>
+                </div>
+            </div>
+
+            <div class="controls-hint-sidebar">
+               <p>MULTIPLAYER MATCH</p>
+            </div>
+
+            <button id="exit-btn" class="glow-btn filled full-width" style="background: var(--poison-color); border-color: var(--poison-color); margin-top: auto;">EXIT MATCH</button>
+            
+            <!-- About kept here too per request? "About will stay like previous" -> assume button available or just panel exists? 
+                 Actually user said "only two things 1 exit button, 2 scoreboard" initially, then "about will stay like previouse".
+                 "Previouse" sidebar had About button. I'll add it back to MP sidebar just in case. -->
+            <button id="about-btn-mp" class="glow-btn outline full-width" style="margin-top: 10px;">ABOUT & CREDITS</button>
         </div>
 
       </div>
