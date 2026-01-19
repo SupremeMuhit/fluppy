@@ -10,3 +10,7 @@ id = "f8102ad49b714af198d7c8e4b6c3fc22"
 [observability.logs]
 enabled = true
 invocation_logs = true
+
+[[migrations]]
+tag = "v1"
+deleted_classes = ["GameRoom"]
