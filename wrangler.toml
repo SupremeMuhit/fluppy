@@ -12,5 +12,6 @@ enabled = true
 invocation_logs = true
 
 [[migrations]]
-tag = "v1"
+tag = "remove-legacy-gameroom"
+new_classes = []
 deleted_classes = ["GameRoom"]
