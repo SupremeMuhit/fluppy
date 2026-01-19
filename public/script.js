@@ -7,6 +7,15 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
 import { getDatabase, ref, set, onValue, get, child, onDisconnect, remove } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
 
+// --- IP LOGGING ---
+// Ping the worker to log the visit
+// IMPORTANT: Update this URL to match your deployed Worker URL
+const LOG_URL = "https://fluppy.suprememuhit.workers.dev/ping"; 
+fetch(LOG_URL).catch(e => {
+  // Silent fail or console warn
+  // console.warn("Logging disabled or failed", e);
+});
+
 // --- FIREBASE CONFIG (PLACEHOLDER) ---
 // REPLACE THIS WITH YOUR OWN FIREBASE CONFIG FROM CONSOLE
 const firebaseConfig = {
