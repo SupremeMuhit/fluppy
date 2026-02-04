@@ -1,29 +1,13 @@
 {
-  "name": "cloudflare-ip-logger",
+  "name": "fluppy-snake",
   "version": "1.0.0",
-  "description": "Cloudflare Workers solution for logging visitor IP addresses on Cloudflare Pages",
-  "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "setup:kv": "wrangler kv:namespace create IP_LOGS",
-    "setup:d1": "wrangler d1 create ip-logs",
-    "setup:schema": "wrangler d1 execute ip-logs --file=workers/schema.sql",
-    "logs": "wrangler tail",
-    "d1:query": "wrangler d1 execute ip-logs --command"
-  },
+  "description": "The Ultimate Retro Snake Experience - A feature-packed modern snake game",
   "keywords": [
-    "cloudflare",
-    "workers",
-    "ip-logging",
-    "analytics",
-    "privacy"
+    "game",
+    "snake",
+    "retro",
+    "arcade"
   ],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "wrangler": "^3.0.0"
-  },
-  "dependencies": {
-    "cannon-es": "^0.20.0"
-  }
+  "author": "SupremeMuhit",
+  "license": "MIT"
 }

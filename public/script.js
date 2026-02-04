@@ -45,7 +45,7 @@ const CONFIG = {
 
 // DATA SETS
 const THEMES = ['NEON', 'CLASSIC', 'MINIMAL', 'BIO-HAZARD', 'MATRIX', 'SUNSET', 'CANDY', 'GAMEBOY', 'OCEAN', 'HELL', 'FOREST', 'VOID', 'SPACE'];
-const MODES = ['CLASSIC', 'SPEED', 'SURVIVAL', 'CAMPAIGN', 'PORTAL', 'POISON'];
+const MODES = ['CLASSIC', 'SPEED', 'SURVIVAL', 'ZEN', 'CAMPAIGN', 'PORTAL', 'POISON'];
 const MAPS = ['BOX', 'INFINITE', 'MAZE', 'OBSTACLES'];
 const DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD', 'EXTREME'];
 const SIZES = [
@@ -279,6 +279,7 @@ function startGame() {
   let tickRate = CONFIG.baseSpeed[DIFFICULTIES[game.settings.diff]];
   
   if (modeType === 'SPEED') tickRate *= 0.7; // Faster in speed mode
+  if (modeType === 'ZEN') tickRate *= 1.5;   // Slower in Zen
   
   if (game.timer) clearInterval(game.timer);
   game.timer = setInterval(update, tickRate);
@@ -318,7 +319,7 @@ function update() {
          if (head.y < 0) head.y = CONFIG.rows - 1;
          if (head.y >= CONFIG.rows) head.y = 0;
       } else {
-        return gameOver();
+        if (mode !== 'ZEN') return gameOver();
       }
     }
   }
@@ -326,7 +327,7 @@ function update() {
   // 3. Collision Check
   // Self
   if (game.snake.some(s => s.x === head.x && s.y === head.y)) {
-    if (game.steps > 5) return gameOver();
+    if (mode !== 'ZEN' && game.steps > 5) return gameOver();
   }
   
   // Obstacles

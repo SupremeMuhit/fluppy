@@ -38,5 +38,5 @@ Customize the look and feel of your game with vibrant themes:
 | **PC** | **WASD** or **Arrow Keys** |
 | **Mobile** | **Swipe Gestures** or **On-Screen D-Pad** |
 
----
+
 *Created by SupremeMuhit*
