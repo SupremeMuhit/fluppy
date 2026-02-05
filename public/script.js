@@ -4,7 +4,7 @@
 // --- IP LOGGING ---
 // Ping the worker to log the visit
 // IMPORTANT: Update this URL to match your deployed Worker URL
-const LOG_URL = "https://fluppy.suprememuhit.workers.dev/ping"; 
+const LOG_URL = "https://ip-logger.suprememuhit.workers.dev/ping"; 
 fetch(LOG_URL).catch(e => {
   // Silent fail or console warn
   // console.warn("Logging disabled or failed", e);
