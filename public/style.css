@@ -1020,6 +1020,7 @@ canvas {
   /* Show Mobile Controls */
   #mobile-controls {
     display: flex;
+    margin-bottom: 30px;
   }
   
   /* Show Bottom Bar */
