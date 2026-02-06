@@ -941,12 +941,12 @@ canvas {
   #game-layout {
     --mobile-bar-height: 84px;
     --mobile-dpad-height: 140px;
-    --mobile-dpad-gap: 16px;
+    --mobile-dpad-gap: 20px;
     flex-direction: column;
     flex: 1;
     height: 100dvh;
     overflow: hidden;
-    padding-bottom: calc(var(--mobile-bar-height) + var(--mobile-dpad-height) + var(--mobile-dpad-gap));
+    padding-bottom: calc(var(--mobile-bar-height) + var(--mobile-dpad-gap));
     align-items: center;
   }
   
@@ -1028,12 +1028,10 @@ canvas {
   /* Show Mobile Controls */
   #mobile-controls {
     display: flex;
-    position: fixed;
-    left: 50%;
-    bottom: calc(var(--mobile-bar-height) + var(--mobile-dpad-gap));
-    transform: translateX(-50%);
     height: var(--mobile-dpad-height);
     justify-content: center;
+    margin-top: 16px;
+    margin-bottom: calc(var(--mobile-bar-height) + var(--mobile-dpad-gap));
   }
   
   /* Show Bottom Bar */
