@@ -939,11 +939,14 @@ canvas {
   }
 
   #game-layout {
+    --mobile-bar-height: 84px;
+    --mobile-dpad-height: 140px;
+    --mobile-dpad-gap: 16px;
     flex-direction: column;
     flex: 1;
     height: 100dvh;
     overflow: hidden;
-    padding-bottom: 90px;
+    padding-bottom: calc(var(--mobile-bar-height) + var(--mobile-dpad-height) + var(--mobile-dpad-gap));
     align-items: center;
   }
   
@@ -1025,22 +1028,26 @@ canvas {
   /* Show Mobile Controls */
   #mobile-controls {
     display: flex;
-    margin-bottom: 30px;
-    margin-top: 24px;
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--mobile-bar-height) + var(--mobile-dpad-gap));
+    transform: translateX(-50%);
+    height: var(--mobile-dpad-height);
+    justify-content: center;
   }
   
   /* Show Bottom Bar */
   #mobile-bottom-bar {
     display: flex;
     position: fixed;
-    left: 0;
+    left: 50%;
     bottom: 0;
     margin-top: 0;
-    padding-top: 16px;
     justify-content: center;
     max-width: 360px;
-    left: 50%;
     transform: translateX(-50%);
+    height: var(--mobile-bar-height);
+    padding-top: 8px;
   }
   
   .leaderboard-panel {
